@@ -1,0 +1,19 @@
+username: "your username"
+token: "your token"
+filters:
+    max_cloud_cover: None # If None, doesn't send it
+dates_list:
+    use_dates_excel: True
+    dates_column: "Date"
+    already_ordered_column: "Ordered"
+    filter_columns:
+      "Too_Cloudy": True
+      "Low_Quality": False
+    excel_path: "/path/to/dates_test.xlsx"
+    save_path: "/path/to/date_acquisitions_test.xlsx"
+dates_range:
+    use_dates_range: False
+    search_from:
+        start: "2025-03-01"
+        end: "2025-03-31"
+    save_path: "/path/to/range_acquisitions.xlsx"

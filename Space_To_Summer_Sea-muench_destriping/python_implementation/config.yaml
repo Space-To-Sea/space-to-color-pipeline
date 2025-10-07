@@ -1,0 +1,311 @@
+paths:
+  batch_dir: "/Users/andrewpignataro/Documents/AndrewUROP/Space_To_Summer_Sea-muench_destriping/python_implementation/"
+  dates_dir_rel_path: "."
+  seadas_l2gen_netcdf_rel_path: "seadas/seadas_products.nc"
+  watermask_tif_path_search: "preseadas/*_WATER_MASK.tif"
+  l2flags_tif_path_search: "preseadas/*_L2_FLAGS.tif"
+  nc_to_gtiff_out_rel_path: "pipeline/nc_to_gtiff_out"
+  rotation_out_rel_path: "pipeline/rotation"
+  masks_out_rel_path: "pipeline/masks"
+  flags_out_rel_path: "pipeline/flags"
+  interpolation_out_rel_path: "pipeline/interp"
+  palette_map_out_rel_path: "pipeline/palette_map"
+  csv_out_rel_path: "pipeline/csv_export"
+  stripe_correction_out_rel_path: "pipeline/destriped"
+nc_to_gtiff:
+  gis:
+    input_crs: "EPSG:32619"
+    output_crs: "EPSG:32619"
+    pixel_size: "30"
+  nc_exports:
+    chlor_a:
+      var_name: "geophysical_data/chlor_a"
+      valid_min:
+      save_name: "chlor_a.tif"
+    cloud_albedo:
+      var_name: "geophysical_data/cloud_albedo"
+      valid_min: 0.
+      save_name: "cloud_albedo.tif"
+    diatoms_hirata:
+      var_name: "geophysical_data/diatoms_hirata"
+      valid_min:
+      save_name: "diatoms_hirata.tif"
+    dinoflagellates_hirata:
+      var_name: "geophysical_data/dinoflagellates_hirata"
+      valid_min:
+      save_name: "dinoflagellates_hirata.tif"
+    greenalgae_hirata:
+      var_name: "geophysical_data/greenalgae_hirata"
+      valid_min:
+      save_name: "greenalgae_hirata.tif"
+    prymnesiophytes_hirata:
+      var_name: "geophysical_data/prymnesiophytes_hirata"
+      valid_min:
+      save_name: "prymnesiophytes_hirata.tif"
+    l2_flags:
+      var_name: "geophysical_data/l2_flags"
+      save_name: "seadas_l2_flags.tif"
+    rhos_655:
+      var_name: "geophysical_data/rhos_655"
+      save_name: "rhos_655.tif"
+    rhos_561:
+      var_name: "geophysical_data/rhos_561"
+      save_name: "rhos_561.tif"
+    rhos_482:
+      var_name: "geophysical_data/rhos_482"
+      save_name: "rhos_482.tif"
+rotation:
+  angle: 14.3
+  nc_out_rel_path: "nc_to_gtiff"
+  mask_out_rel_path: "flags"
+flags:
+  flag_levels:
+    l1:
+      0: "FILL"                # Fill data (1 = fill, 0 = image data)
+      1: "DILATED_CLOUD"       # Dilated cloud
+      2: "CIRRUS"              # High confidence cirrus
+      3: "CLOUD"               # High confidence cloud
+      4: "CLOUD_SHADOW"        # High confidence cloud shadow
+      5: "SNOW"                # High confidence snow cover
+      6: "CLEAR"               # Clear (1 if cloud and dilated cloud bits not set)
+      7: "WATER"               # Water (1 = water, 0 = land or cloud)
+      8: "CLOUD_CONF_LOW"      # Cloud confidence bit 0 (part of 2-bit field)
+      9: "CLOUD_CONF_HIGH"     # Cloud confidence bit 1 (part of 2-bit field)
+      10: "SHADOW_CONF_LOW"    # Cloud shadow confidence bit 0 (part of 2-bit field)
+      11: "SHADOW_CONF_HIGH"   # Cloud shadow confidence bit 1 (part of 2-bit field)
+      12: "SNOW_CONF_LOW"      # Snow/ice confidence bit 0 (part of 2-bit field)
+      13: "SNOW_CONF_HIGH"     # Snow/ice confidence bit 1 (part of 2-bit field)
+      14: "CIRRUS_CONF_LOW"    # Cirrus confidence bit 0 (part of 2-bit field)
+      15: "CIRRUS_CONF_HIGH"   # Cirrus confidence bit 1 (part of 2-bit field)
+    l2:
+      0: "ATMFAIL"           # Atmospheric correction failed
+      1: "LAND"              # Land pixel (though often not used in Landsat)
+      2: "PRODWARN"          # Product warning
+      3: "HIGLINT"           # High sun glint
+      4: "HILT"              # High total radiance
+      5: "HISATZEN"          # High satellite zenith angle
+      6: "COASTZ"            # Coastal zone
+      7: "SEADAS_CLOUD"      # Cloud (SeaDAS algorithm)
+      8: "CLOUD_SHADOW"      # Cloud shadow
+      9: "CLOUD"             # Cloud (general)
+      10: "COCCOLITH"        # Coccolithophore bloom
+      11: "TURBIDW"          # Turbid water
+      12: "HISOLZEN"         # High solar zenith angle
+      13: "SPARE13"          # Spare bit
+      14: "LOWLW"            # Low water-leaving radiance
+      15: "CHLFAIL"          # Chlorophyll-a calculation failed
+      16: "NAVWARN"          # Navigation warning
+      17: "SPARE17"          # Spare bit
+      18: "RRSWARN"          # Remote sensing reflectance warning
+      19: "MAXAERITER"       # Maximum aerosol iterations reached
+      20: "MODGLINT"         # Moderate sun glint
+      21: "CHLWARN"          # Chlorophyll-a warning
+      22: "ATMWARN"          # Atmospheric correction warning
+      23: "SPARE23"          # Spare bit
+      24: "SPARE24"          # Spare bit
+      25: "NAVFAIL"          # Navigation failure
+      26: "FILTER"           # Filter applied
+      27: "NEG_RHORC"        # Negative Rayleigh-corrected reflectance
+      28: "NEG_AR"           # Negative aquatic reflectance
+      29: "HIPOL"            # High polarization
+      30: "PRODFAIL"         # Product failure
+      31: "SPARE31"          # Spare bit (sign bit for signed int32)
+  preseadas_derived:
+    save_folder_rel_path: "preseadas"
+    flag_level: "l2"
+  seadas_products_nc_derived:
+    save_folder_rel_path: "seadas"
+    flag_level: "l2"
+  masks:
+    is_cloud: "seadas/CLOUD.tif"
+    is_shadow: "seadas/CLOUD_SHADOW.tif"
+    is_out_bounds: "seadas/NAVWARN.tif"
+    prod_fail: "seadas/PRODFAIL.tif"
+  masks_out_rel_path: "masks"
+interpolation:
+  num_iterations: 2 #5
+  max_distance: 300 #50
+  smoothing_iterations: 2
+masking:
+  land_clouds_mask:
+    massachusetts_geojson_abs_path: "/home/alexfranks/ECs/STSS/Space_To_Summer_Sea/massachusetts_coastline_shapefile.geojson"
+    out_bounds_mask: ["is_out_bounds", 0]
+    l2_clouds_mask: ["is_cloud", 1]
+    cloud_albedo_threshold: 0.015
+    mask_save_rel_path: "land_clouds.tif"
+  # Parameters for applying out_bounds_mask to interpolated images
+  # Options: "none", "all", "empty_rows_only"
+  # - "none": Don't apply out_bounds_mask
+  # - "all": Apply out_bounds_mask to all pixels where mask is 1 or nodata
+  # - "empty_rows_only": Only apply mask to pixels in rows that have no valid data
+  apply_out_bounds_mask_to_interpolated: "empty_rows_only"
+  out_bounds_mask_file: "is_out_bounds.tif"
+palette_map:
+  processing_products:
+    rotated: True
+    interpolated: True
+    destriped: True
+  masks:
+    land_clouds_mask:
+      masks:
+        - ["land_clouds", 1]
+      mask_save_rel_path:
+      save_rel_path:
+    shadow_mask:
+      masks:
+        - ["is_shadow", 0]
+      mask_save_rel_path:
+      save_rel_path:
+    out_bounds_mask:
+      masks:
+        - ["is_out_bounds", 0]
+      mask_save_rel_path:
+    rrs_mask:
+      masks:
+        - ["is_out_bounds", 0]
+        - ["is_shadow", 0]
+        - ["land_clouds", 0]
+      mask_save_rel_path: "rrs_mask"
+  hirata:
+    alpha_mask: "rrs_mask"
+    exports:
+      diatoms_hirata:
+        palette: "diatoms_hirata"
+        save_name: "diatoms_hirata.tif"
+      dinoflagellates_hirata:
+        palette: "dinoflagellates_hirata"
+        save_name: "dinoflagellates_hirata.tif"
+      greenalgae_hirata:
+        palette: "greenalgae_hirata"
+        save_name: "greenalgae_hirata.tif"
+      prymnesiophytes_hirata:
+        palette: "prymnesiophytes_hirata"
+        save_name: "prymnesiophytes_hirata.tif"
+  chlor_a:
+    range_min: 0.01
+    range_max: 20.0
+    alpha_mask: "rrs_mask"
+    exports:
+      grayscale:
+        palette: "grayscale"
+        save_name: "chlor_a_grayscale.tif"
+      oceancolor:
+        palette: "oceancolor"
+        save_name: "chlor_a_oceancolor.tif"
+  rgb:
+    exports:
+      rgb:
+        alpha_mask: "out_bounds_mask"
+        save_name: "rgb.tif"
+      land_clouds:
+        alpha_mask: "land_clouds_mask"
+        save_name: "land_clouds.tif"
+  palettes:
+    diatoms_hirata:
+      values: [0.00, 0.07, 0.14, 0.21, 0.28, 0.35, 0.42, 0.49, 0.56, 0.63, 0.70, 0.77]
+      colors: ["#c978cf", "#c861cb", "#c74ec8", "#c44ac6", "#ba38bf", "#a530b1", "#9129a2", "#7e2194", "#6b1985", "#50156c", "#381052", "#220939"]
+    dinoflagellates_hirata:
+      values: [0.0, 0.025, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25]
+      colors: ["#fff819", "#ffe500", "#ffcb11", "#ffb800", "#ffb000", "#ff9c00", "#ff8700", "#ff7500", "#ff6000", "#ff4b00", "#ff3900"]
+    greenalgae_hirata:
+      values: [0.0000, 0.0053, 0.0105, 0.0158, 0.0211, 0.0263, 0.0316, 0.0368, 0.0421, 0.0474, 0.0526, 0.0579, 0.0632, 0.0684, 0.0737, 0.0789, 0.0842, 0.0895, 0.0947, 0.1000, 0.1053, 0.1105, 0.1158, 0.1211, 0.1263, 0.1316, 0.1368, 0.1421, 0.1474, 0.1526, 0.1579, 0.1632, 0.1684, 0.1737, 0.1789, 0.1842, 0.1895, 0.1947, 0.2000]
+      colors: ["#ebff73", "#ebff73", "#e6ff73", "#e6f673", "#e1f673", "#dcf673", "#dcf673", "#d7f650", "#d7f650", "#d2f832", "#d2f832", "#cdfd1e", "#cdfd1e", "#b9ff12", "#b9ff12", "#a0ff0a", "#a0ff0a", "#86ff06", "#86ff06", "#6dff04", "#6dff04", "#55fe02", "#55fe02", "#3efb01", "#3efb01", "#27f600", "#27f600", "#08dc00", "#08dc00", "#03d100", "#03d100", "#00c800", "#00c400", "#00ac00", "#00a000", "#008c00", "#008200", "#006e00", "#006400"]
+    prymnesiophytes_hirata:
+      values: [0.0, 0.014583333333333332, 0.029166666666666664, 0.04375, 0.05833333333333333, 0.07291666666666663, 0.0875, 0.10208333333333332, 0.11666666666666665, 0.13124999999999998, 0.14583333333333326, 0.16041666666666665, 0.175, 0.1895833333333333, 0.20416666666666664, 0.21875, 0.2333333333333333, 0.24791666666666667, 0.26249999999999996, 0.27708333333333335, 0.2916666666666665, 0.30625, 0.3208333333333333, 0.33541666666666664, 0.35]
+      colors: ["#e6f9ff", "#d6f0ff", "#c5e7fe", "#b5defd", "#a5d4fc", "#94cbfb", "#84c2fa", "#73b9f9", "#63aff8", "#52a6f7", "#429df6", "#3194f5", "#218af4", "#1081f3", "#0078f2", "#0070df", "#0067cc", "#005fb9", "#0057a7", "#004e95", "#004683", "#003e71", "#00355f", "#002c4d", "#00233b"]
+    oceancolor:
+      values: [0.01, 0.014, 0.021, 0.031, 0.046, 0.065, 0.096, 0.142, 0.209, 0.299, 0.44, 0.649, 0.956, 1.368, 2.014, 2.968, 4.373, 6.256, 9.211, 13.573, 20]
+      colors: ["#93006c", "#6f0090", "#4800b7", "#2100de", "#000aff", "#004aff", "#0090ff", "#00d5ff", "#00ffd7", "#00ff77", "#00ff0f", "#60ff00", "#c8ff00", "#ffeb00", "#ffb700", "#ff8300", "#ff4f00", "#ff1f00", "#e60000", "#a50000", "#690000"]
+    grayscale:
+      values: [1e-07, 0.2, 0.4, 0.6, 0.8, 1.0]
+      colors: ["#000000", "#333333", "#666666", "#999999", "#cccccc", "#ffffff"]
+csv_export:
+  region_crs: "EPSG:4326"
+  netcdf_crs: "EPSG:32619"
+  regions:
+    "1":
+      north: 42.64
+      south: 42.48
+      east: -70.26
+      west: -70.42
+    "2":
+      north: 41.96
+      south: 41.80
+      east: -70.17
+      west: -70.33
+    "3":
+      north: 41.56
+      south: 41.40
+      east: -70.25
+      west: -70.41
+    "4":
+      north: 41.24
+      south: 41.08
+      east: -70.28
+      west: -70.44
+stripe_correction:
+  land_cloud_reqs: #input_path_var: "rotation_out_rel_path"
+    apply_contrast_enhancement: false
+    input_basenames:
+      - "cloud_albedo.tif"
+      - "rhos_482.tif"
+      - "rhos_561.tif"
+      - "rhos_655.tif"
+    params:
+      apply_contrast_enhancement: false
+      dec_num_v: 3 #12
+      sigma_v: 1 #3
+      dec_num_h: 0
+      sigma_h: 0
+      wavelet_type: 'db8' #'db8' #'db25'
+    # save_end_name: "_destriped.tif"
+  rrs_derived: #input_path_var: "interpolation_out_rel_path"
+    input_basenames:
+      - "chlor_a.tif"
+      - "diatoms_hirata.tif"
+      - "dinoflagellates_hirata.tif"
+      - "greenalgae_hirata.tif"
+      - "prymnesiophytes_hirata.tif"
+    params:
+      apply_contrast_enhancement: false
+      dec_num_v: 6 #5 #7 #10
+      sigma_v: 1.75 #1.5 #1.5 #2
+      dec_num_h: 0
+      sigma_h: 0
+      wavelet_type: 'bior6.8' #'db25' #'db8' #'db25'
+    # save_end_name: "_destriped.tif"
+  chlor_a: #input_path_var: "interpolation_out_rel_path"
+    input_basenames:
+      - "chlor_a.tif"
+    params:
+      apply_contrast_enhancement: false
+      dec_num_v: 2 #5 #7 #10
+      sigma_v: 3 #1.5 #1.5 #2
+      dec_num_h: 0
+      sigma_h: 0
+      wavelet_type: 'bior6.8' #'db25' #'db8' #'db25'
+    # save_end_name: "_destriped.tif"
+  hirata: #input_path_var: "interpolation_out_rel_path"
+    input_basenames:
+      - "diatoms_hirata.tif"
+      - "dinoflagellates_hirata.tif"
+      - "greenalgae_hirata.tif"
+      - "prymnesiophytes_hirata.tif"
+    params:
+      apply_contrast_enhancement: false
+      dec_num_v: 6 #5 #7 #10
+      sigma_v: 2 #1.5 #1.5 #2
+      dec_num_h: 0
+      sigma_h: 0
+      wavelet_type: 'bior6.8' #'db25' #'db8' #'db25'
+    # save_end_name: "_destriped.tif"
+rerun_from_step: 7
+verbose:
+  setup: false
+  nc_to_gtiff: true
+  rotation: false
+  interpolation: true
+  flag: true
+  palette_map: true
+  csv_export: true
+  stripe_correction: true
