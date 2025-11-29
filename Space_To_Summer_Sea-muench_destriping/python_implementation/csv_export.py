@@ -187,16 +187,16 @@ def write_csv_file(rows, variables, csv_path, scene_width, pixel_resolution_km):
     df = df[column_order]
 
     header_row = "featureId " + " ".join([f"{var}:float" for var in variables]) + " longitude:float latitude:float"+ " region:float"
-
+    
+    #if the file doesn't exist, create it and add the header
     if not os.path.exists(csv_path):
         with open(csv_path, 'w') as f:
             f.write(f"#sceneRasterWidth={scene_width}\n")
             f.write(f"#rasterResolutionInKm={pixel_resolution_km}\n")
             f.write(f"{header_row}\n")
-            df.to_csv(f, sep=' ', index=False, header=False, float_format='%.8f')
-    else: 
-        with open(csv_path, 'a') as f:
-            df.to_csv(f, sep=' ', index=False, header=False, float_format='%.8f')
+    #write df data to csv
+    with open(csv_path, 'a') as f:
+        df.to_csv(f, sep=' ', index=False, header=False, float_format='%.8f')
 
 def calculate_scene_metadata(tiff_data, window_transform):
     """Calculate scene metadata for CSV headers."""
