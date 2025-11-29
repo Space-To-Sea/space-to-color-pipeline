@@ -130,7 +130,7 @@ def create_coordinate_arrays(data_shape, window_transform, transformer):
 
     return lon, lat
 
-def create_csv_data(tiff_data, variables, lon, lat):
+def create_csv_data(tiff_data, variables, lon, lat, region_num):
     """Create CSV data from TIFF data and coordinates."""
     if not tiff_data:
         return []
@@ -169,7 +169,8 @@ def create_csv_data(tiff_data, variables, lon, lat):
                     'featureId': feature_id,
                     **row_data,
                     'longitude': float(lon_val),
-                    'latitude': float(lat_val)
+                    'latitude': float(lat_val),
+                    'region': float(region_num)
                 }
                 rows.append(row)
                 feature_id += 1
@@ -182,16 +183,20 @@ def write_csv_file(rows, variables, csv_path, scene_width, pixel_resolution_km):
         return
 
     df = pd.DataFrame(rows)
-    column_order = ['featureId'] + variables + ['longitude', 'latitude']
+    column_order = ['featureId'] + variables + ['longitude', 'latitude','region']
     df = df[column_order]
 
-    header_row = "featureId " + " ".join([f"{var}:float" for var in variables]) + " longitude:float latitude:float"
-
-    with open(csv_path, 'w') as f:
-        f.write(f"#sceneRasterWidth={scene_width}\n")
-        f.write(f"#rasterResolutionInKm={pixel_resolution_km}\n")
-        f.write(f"{header_row}\n")
-        df.to_csv(f, sep='\t', index=False, header=False, float_format='%.8f')
+    header_row = "featureId " + " ".join([f"{var}:float" for var in variables]) + " longitude:float latitude:float"+ " region:float"
+    
+    #if the file doesn't exist, create it and add the header
+    if not os.path.exists(csv_path):
+        with open(csv_path, 'w') as f:
+            f.write(f"#sceneRasterWidth={scene_width}\n")
+            f.write(f"#rasterResolutionInKm={pixel_resolution_km}\n")
+            f.write(f"{header_row}\n")
+    #write df data to csv
+    with open(csv_path, 'a') as f:
+        df.to_csv(f, sep=' ', index=False, header=False, float_format='%.8f')
 
 def calculate_scene_metadata(tiff_data, window_transform):
     """Calculate scene metadata for CSV headers."""
@@ -263,7 +268,7 @@ def csv_export(config: Dict, date_dir_path: str):
         )
 
         # Create CSV data
-        rows = create_csv_data(tiff_data, variables, lon, lat)
+        rows = create_csv_data(tiff_data, variables, lon, lat, region_num)
 
         if not rows:
             continue
@@ -272,7 +277,7 @@ def csv_export(config: Dict, date_dir_path: str):
         scene_width, pixel_resolution_km = calculate_scene_metadata(tiff_data, window_transform)
 
         # Write CSV file
-        csv_filename = f"{date_str}-r{region_num}.csv"
+        csv_filename = f"{date_str}.csv"
         csv_path = os.path.join(output_dir_path, csv_filename)
         write_csv_file(rows, variables, csv_path, scene_width, pixel_resolution_km)
 
