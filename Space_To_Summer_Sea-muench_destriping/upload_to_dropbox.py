@@ -3,16 +3,31 @@ import os
 from dropbox.files import WriteMode
 from dropbox.common import PathRoot
 
-# === CONFIG ===
-# Each user should paste their own access token as a string here
-#Never share your access_token with anyone else. Remove it before you upload this script anywhere
-#Find your access token by:
-    #going to https://www.dropbox.com/developers
-    #Create an app with Full Dropbox access
-    #Generate and copy the access token below
-ACCESS_TOKEN="*****"
 
-dbx = dropbox.Dropbox(ACCESS_TOKEN)
+# Taken fron download_from_drop.py
+def first_time_config(APP_KEY, APP_SECRET):
+    flow = dropbox.DropboxOAuth2FlowNoRedirect(
+        APP_KEY,
+        APP_SECRET,
+        token_access_type="offline"
+    )
+
+    # Step A: open this URL in your browser
+    authorize_url = flow.start()
+    print("1) Go to this URL and click Allow:")
+    print(authorize_url)
+
+    # Step B: Dropbox shows you a short code
+    auth_code = input("2) Paste the authorization code here: ").strip()
+
+    # Step C: exchange code for tokens
+    oauth_result = flow.finish(auth_code)
+
+    print("\nSAVE THIS — YOU WILL NOT SEE IT AGAIN")
+    print("Refresh token:", oauth_result.refresh_token)
+    
+
+# ================= 
 
 # SHARED_FOLDER_ID = "9544754880" # ID for folder Space to Sea Summer 2021
 DROPBOX_SUBFOLDER_PATH = r"/Space To Sea Summer 2021/Data Visualization Jan 2025/real_csvs"  # path inside the shared folder
@@ -22,9 +37,7 @@ CHUNK_SIZE = 4 * 1024 * 1024
 
 # =================
 
-def upload_file(file_path):
-    # Connect to Dropbox
-    dbx = dropbox.Dropbox(ACCESS_TOKEN)
+def upload_file(dbx, file_path):
     DROPBOX_FILE_NAME = os.path.basename(file_path)
 
     file_size = os.path.getsize(file_path)
@@ -51,7 +64,69 @@ def upload_file(file_path):
 
     print("Upload complete!")
 
-if __name__ == "__main__":
-    file_path = r"C:/Users/raine/Data/School/MIT/Freshman Year/UROP/CSV/2015-09-06.csv"
 
-    upload_file(file_path)
+#Funciton that checks which files have been uploaded so that we don't upload dulicates
+def get_uploaded_files(dbx, dbx_folder):
+    uploaded_files = set();
+    try:
+        results = dbx.files_list_folder(dbx_folder)
+        while True:
+            for entry in results.entries:
+                uploaded_files.add(entry.name)
+            if not results.has_more:
+                break
+            results = dbx.files_list_folder_continue(results.cursor)
+    except dropbox.exceptions.ApiError:
+        print("Error listing dropbox folder/accessing already uploaded files")
+    return uploaded_files
+
+
+
+if __name__ == "__main__":
+
+    #NOTE
+    #To find your APP_KEY and APP_SECRET, follow the instructions below:
+    #Never share your app_key and app_secret with anyone else. Remove it before you upload this script anywhere
+        #Go to https://www.dropbox.com/developers
+        #Create an app with Full Dropbox access
+        #Copy the app key and app secret below
+    APP_KEY = "***"
+    APP_SECRET = "***"
+
+
+    #NOTE
+    #If first time running scrip uncomment the line below and follow the instructions
+    #first_time_config(APP_KEY,APP_SECRET)
+    
+
+    #Once you get your refresh token, copy it below. Then comment out the two lines above again.
+    REFRESH_TOKEN="***"
+
+    dbx = dropbox.Dropbox(
+        app_key=APP_KEY,
+        app_secret=APP_SECRET,
+        oauth2_refresh_token=REFRESH_TOKEN
+    )
+
+
+    #NOTE
+    # Change file path to the directory of where the CSV files you want to upload are
+    # Ex.  "C:/Users/bob/Something/School/MIT/UROP/CSV_Files/"
+    # OPTIONALLY change this to the directory of files you wish to upload. ALL files must be the same type
+    LOCAL_CSV_PATH = r"PASTE CSV DIR HERE"
+
+    files_already_in_dbx = get_uploaded_files(dbx,DROPBOX_SUBFOLDER_PATH)
+
+
+    #NOTE uploades all csv files in LOCAL_CSV_PATH so only place csv files you wish to upload to dropbox in this dir
+    for file in os.listdir(LOCAL_CSV_PATH):
+
+        #NOTE you could also upload other types of files just change the ".csv" into whatever file type (e.g. ".pdf" or ".png")
+        if file.endswith(".csv"):
+
+            if file in files_already_in_dbx:
+                print(f"Skipping {file} (already uploaded)")
+                pass
+            
+            file_path = os.path.join(LOCAL_CSV_PATH,file)
+            upload_file(dbx, file_path)
