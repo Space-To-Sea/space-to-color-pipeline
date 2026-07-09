@@ -68,23 +68,24 @@ def upload_file(dbx, file_path, folder_name):
                     cursor.offset = f.tell()
 
     print("Upload complete!")
+  
 
 
-#Funciton that checks which files have been uploaded so that we don't upload dulicates
-def get_uploaded_files(dbx, dbx_folder):
-    uploaded_files = set();
-    try:
-        results = dbx.files_list_folder(dbx_folder)
-        while True:
-            for entry in results.entries:
-                uploaded_files.add(entry.name)
-            if not results.has_more:
-                break
-            results = dbx.files_list_folder_continue(results.cursor)
-    except dropbox.exceptions.ApiError:
-        print("Error listing dropbox folder/accessing already uploaded files")
-    return uploaded_files
-    
+def get_dbx_folders(dropbox_path):
+    folders = []
+
+    result = dbx.files_list_folder(dropbox_path)
+
+    while True:
+        for entry in result.entries:
+            if isinstance(entry, dropbox.files.FolderMetadata):
+                folders.append(entry.name)
+        if not result.has_more:
+            break
+
+    result = dbx.files_list_folder_continue(result.cursor)
+
+    return folders
 
 if __name__ == "__main__":
 
@@ -115,21 +116,24 @@ if __name__ == "__main__":
 
     #NOTE
     # Make this the path to the folder containing all the folders with test images 
-    # e.g. /USER/A/B/C/Test_Images/test_001_L6_sigma2p4_db42/
-    LOCAL_FOLDER_PATH = r"PASTE HERE"
+    # e.g. /USER/A/B/C/Test_Images/
+    # this folder should contain the other folders like test01_a_b_c
     
-    LOCAL_FOLDER_NAME = os.path.basename(os.path.normpath(LOCAL_FOLDER_PATH))
 
-    #print("Script started")
-    #print("Folder:", LOCAL_FOLDER_PATH)
-    #print("Exists:", os.path.exists(LOCAL_FOLDER_PATH))
+    FOLDER_PATH = r"/Users/jmrivera/Downloads/temp" 
 
 
-    #print("Files found:")
-    #print(os.listdir(LOCAL_FOLDER_PATH))
-    #NOTE uploades all csv files in LOCAL_CSV_PATH so only place csv files you wish to upload to dropbox in this dir
-    for file in os.listdir(LOCAL_FOLDER_PATH):
-        #NOTE you could also upload other types of files just change the ".csv" into whatever file type (e.g. ".pdf" or ".png")
-        if file.endswith(".jpg"):            
-            file_path = os.path.join(LOCAL_FOLDER_PATH,file)
-            upload_file(dbx, file_path, LOCAL_FOLDER_NAME)
+    already_uploaded = get_dbx_folders(DROPBOX_SUBFOLDER_PATH)
+
+    for folder in os.listdir(FOLDER_PATH):
+        if folder not in already_uploaded:           
+            temp_folder_path = os.path.join(FOLDER_PATH,folder)
+            for file in os.listdir(temp_folder_path):
+                if file.endswith(".jpg"):    # you can this to upload other types of files too         
+                    file_path = os.path.join(temp_folder_path,file)
+                    upload_file(dbx, file_path, folder)
+        else:
+            print(f"Skipping {folder} (already uploaded)")
+
+
+    
