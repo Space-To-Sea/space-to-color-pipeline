@@ -16,7 +16,6 @@ Example:
         --sigma-v 2.4 \
         --dec-h 0 \
         --sigma-h 0 \
-        --enhance-contrast
 """
 
 import argparse
